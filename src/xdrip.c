@@ -10,18 +10,15 @@ TextLayer *cgmtime_layer = NULL;
 TextLayer *message_layer = NULL;		// BG DELTA & MESSAGE LAYER
 TextLayer *battlevel_layer = NULL;
 TextLayer *watch_battlevel_layer = NULL;
-//TextLayer *t1dname_layer = NULL;
 TextLayer *time_watch_layer = NULL;
 TextLayer *time_app_layer = NULL;
 TextLayer *date_app_layer = NULL;
 
 BitmapLayer *icon_layer = NULL;
-//BitmapLayer *cgmicon_layer = NULL;
 BitmapLayer *appicon_layer = NULL;
 
 GBitmap *icon_bitmap = NULL;
 GBitmap *appicon_bitmap = NULL;
-//GBitmap *cgmicon_bitmap = NULL;
 GBitmap *specialvalue_bitmap = NULL;
 
 static char time_watch_text[] = "00:00";
@@ -66,10 +63,6 @@ static bool specvalue_alert = false;
 static bool specvalue_overwrite = false;
 static bool hypolow_overwrite = false;
 static bool biglow_overwrite = false;
-//static bool midlow_overwrite = false;
-//static bool low_overwrite = false;
-//static bool high_overwrite = false;
-//static bool midhigh_overwrite = false;
 static bool bighigh_overwrite = false;
 
 // global variables for vibrating in special conditions
@@ -111,14 +104,6 @@ static const uint8_t TIMEAGO_BUFFER_SIZE = 10;
 // BG Ranges, MG/DL
 static const uint16_t SPECVALUE_BG_MGDL = 20;
 static const uint16_t SHOWLOW_BG_MGDL = 40;
-//static const uint16_t HYPOLOW_BG_MGDL = 55;
-//static const uint16_t BIGLOW_BG_MGDL = 60;
-//static const uint16_t MIDLOW_BG_MGDL = 70;
-//static const uint16_t LOW_BG_MGDL = 80;
-
-//static const uint16_t HIGH_BG_MGDL = 180;
-//static const uint16_t MIDHIGH_BG_MGDL = 240;
-//static const uint16_t BIGHIGH_BG_MGDL = 300;
 static const uint16_t SHOWHIGH_BG_MGDL = 400;
 
 // BG Ranges, MMOL
@@ -128,35 +113,15 @@ static const uint16_t SHOWHIGH_BG_MGDL = 400;
 // GOOD : 5.0, 12.2 // BAD : 7 , 14.44
 static const uint16_t SPECVALUE_BG_MMOL = 11;
 static const uint16_t SHOWLOW_BG_MMOL = 22;
-//static const uint16_t HYPOLOW_BG_MMOL = 31;
-//static const uint16_t BIGLOW_BG_MMOL = 33;
-//static const uint16_t MIDLOW_BG_MMOL = 40;
-//static const uint16_t LOW_BG_MMOL = 44;
-
-//static const uint16_t HIGH_BG_MMOL = 120;
-//static const uint16_t MIDHIGH_BG_MMOL = 135;
-//static const uint16_t BIGHIGH_BG_MMOL = 150;
 static const uint16_t SHOWHIGH_BG_MMOL = 220;
 
 // BG Snooze Times, in Minutes; controls when vibrate again
 // RANGE 0-240
 static const uint8_t SPECVALUE_SNZ_MIN = 30;
-//static const uint8_t HYPOLOW_SNZ_MIN = 5;
-//static const uint8_t BIGLOW_SNZ_MIN = 5;
-//static const uint8_t MIDLOW_SNZ_MIN = 10;
-//static const uint8_t LOW_SNZ_MIN = 15;
-//static const uint8_t HIGH_SNZ_MIN = 30;
-//static const uint8_t MIDHIGH_SNZ_MIN = 30;
-//static const uint8_t BIGHIGH_SNZ_MIN = 30;
 	
 // Vibration Levels; 0 = NONE; 1 = LOW; 2 = MEDIUM; 3 = HIGH
 // IF YOU DO NOT WANT A SPECIFIC VIBRATION, SET TO 0
 static const uint8_t SPECVALUE_VIBE = 2;
-//static const uint8_t HYPOLOWBG_VIBE = 3;
-//static const uint8_t BIGLOWBG_VIBE = 3;
-//static const uint8_t LOWBG_VIBE = 3;
-//static const uint8_t HIGHBG_VIBE = 2;
-//static const uint8_t BIGHIGHBG_VIBE = 2;
 static const uint8_t DOUBLEDOWN_VIBE = 3;
 static const uint8_t APPSYNC_ERR_VIBE = 1;
 static const uint8_t APPMSG_INDROP_VIBE = 1;
@@ -237,17 +202,12 @@ static const uint8_t TIMEAGO_ICONS[] = {
 	RESOURCE_ID_IMAGE_NONE,			//0
 	RESOURCE_ID_IMAGE_PHONEON,		//1
 	RESOURCE_ID_IMAGE_PHONEOFF,	 	//2
-//	RESOURCE_ID_IMAGE_RCVRON,		//3
-//	RESOURCE_ID_IMAGE_RCVROFF		//4
 };
 
 // INDEX FOR ARRAY OF TIMEAGO ICONS
 static const uint8_t NONE_TIMEAGO_ICON_INDX = 0;
 static const uint8_t PHONEON_ICON_INDX = 1;
 static const uint8_t PHONEOFF_ICON_INDX = 2;
-//static const uint8_t RCVRON_ICON_INDX = 3;
-//static const uint8_t RCVROFF_ICON_INDX = 4;
-
 
 
 static char *translate_app_error(AppMessageResult result) {
@@ -401,6 +361,7 @@ static void create_update_bitmap(GBitmap **bmp_image, BitmapLayer *bmp_layer, co
 } // end create_update_bitmap
 
 
+// battery_handler - updates the pebble battery percentage.
 static void battery_handler(BatteryChargeState charge_state) {
 
 	static char watch_battlevel_percent[7];
@@ -415,7 +376,7 @@ static void battery_handler(BatteryChargeState charge_state) {
 	}	
 
 
-}
+} // end battery_handler
 
 static void alert_handler_cgm(uint8_t alertValue) {
 	//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER");
@@ -438,13 +399,6 @@ static void alert_handler_cgm(uint8_t alertValue) {
 	const uint8_t LOWALERT_BEEBUZZ_STRONG = 25;
 	const uint8_t LOWALERT_BEEBUZZ_SHORT = (25/2);
 	
-	// PAST PATTERNS
-	//const uint32_t hypo[] = { 3200,200,3200 };
-	//const uint32_t low[] = { 1000,100,2000 };
-	//const uint32_t hyper[] = { 50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150,50,150 };
-	//const uint32_t trend_high[] = { 200,200,1000,200,200,200,1000 };
-	//const uint32_t trend_low[] = { 2000,200,1000 };
-	//const uint32_t alert[] = { 500,200,1000 };
 	
 	// CODE START
 	
@@ -464,10 +418,10 @@ static void alert_handler_cgm(uint8_t alertValue) {
 			//Low
 			//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: LOW ALERT");
 			VibePattern low_alert_pat = {
-			.durations = lowalert_beebuzz,
-			.num_segments = LOWALERT_BEEBUZZ_STRONG,
+				.durations = lowalert_beebuzz,
+				.num_segments = LOWALERT_BEEBUZZ_STRONG,
 			};
-		if (TurnOffStrongVibrations) { low_alert_pat.num_segments = LOWALERT_BEEBUZZ_SHORT; };
+			if (TurnOffStrongVibrations) { low_alert_pat.num_segments = LOWALERT_BEEBUZZ_SHORT; };
 			vibes_enqueue_custom_pattern(low_alert_pat);
 			break;
 
@@ -475,10 +429,10 @@ static void alert_handler_cgm(uint8_t alertValue) {
 			// Medium Alert
 			//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: MEDIUM ALERT");
 			VibePattern med_alert_pat = {
-			.durations = medalert_long,
-			.num_segments = MEDALERT_LONG_STRONG,
+				.durations = medalert_long,
+				.num_segments = MEDALERT_LONG_STRONG,
 			};
-		if (TurnOffStrongVibrations) { med_alert_pat.num_segments = MEDALERT_LONG_SHORT; };
+			if (TurnOffStrongVibrations) { med_alert_pat.num_segments = MEDALERT_LONG_SHORT; };
 			vibes_enqueue_custom_pattern(med_alert_pat);
 			break;
 
@@ -937,14 +891,6 @@ static void load_bg() {
 	uint16_t BG_MGDL[] = {
 		SPECVALUE_BG_MGDL,	//0
 		SHOWLOW_BG_MGDL,	//1
-//		HYPOLOW_BG_MGDL,	//2
-//		BIGLOW_BG_MGDL,		//3
-//		MIDLOW_BG_MGDL,		//4
-//		LOW_BG_MGDL,		//5
-//		HIGH_BG_MGDL,		//6
-//		MIDHIGH_BG_MGDL,	//7
-//		BIGHIGH_BG_MGDL,	//8
-//		SHOWHIGH_BG_MGDL	//9
 		SHOWHIGH_BG_MGDL	//2
 	};
 	
@@ -952,29 +898,12 @@ static void load_bg() {
 	uint16_t BG_MMOL[] = {
 		SPECVALUE_BG_MMOL,	//0
 		SHOWLOW_BG_MMOL,	//1
-//		HYPOLOW_BG_MMOL,	//2
-//		BIGLOW_BG_MMOL,		//3
-//		MIDLOW_BG_MMOL,		//4
-//		LOW_BG_MMOL,		//5
-//		HIGH_BG_MMOL,		//6
-//		MIDHIGH_BG_MMOL,	//7
-//		BIGHIGH_BG_MMOL,	//8
-//		SHOWHIGH_BG_MMOL	//9
 		SHOWHIGH_BG_MMOL	//2
 	};
 		
 	// INDEX FOR ARRAYS OF BG CONSTANTS
 	const uint8_t SPECVALUE_BG_INDX = 0;
 	const uint8_t SHOWLOW_BG_INDX = 1;
-//	const uint8_t HYPOLOW_BG_INDX = 2;
-//	const uint8_t BIGLOW_BG_INDX = 3;
-//	const uint8_t MIDLOW_BG_INDX = 4;
-//	const uint8_t LOW_BG_INDX = 5;
-//	const uint8_t HIGH_BG_INDX = 6;
-//	const uint8_t MIDHIGH_BG_INDX = 7;
-//	const uint8_t BIGHIGH_BG_INDX = 8;
-//	const uint8_t SHOWHIGH_BG_INDX = 9;
-//	const uint8_t BIGHIGH_BG_INDX = 4;
 	const uint8_t SHOWHIGH_BG_INDX = 2;
 	
 	// MG/DL SPECIAL VALUE CONSTANTS ACTUAL VALUES
@@ -1185,9 +1114,6 @@ static void load_bg() {
 				specvalue_overwrite = false;
 				hypolow_overwrite = false;
 				biglow_overwrite = false;
-//				midlow_overwrite = false;
-//				low_overwrite = false;
-//				midhigh_overwrite = false;
 				bighigh_overwrite = false;
 			}
 			
@@ -1195,230 +1121,11 @@ static void load_bg() {
 			//APP_LOG(APP_LOG_LEVEL_DEBUG, "specvalue_overwrite OUT: %i", specvalue_overwrite);
 		} // else if SPECIAL VALUE BG
 			
-		// check for HYPO LOW BG and not SPECIAL VALUE
-/*		else if ( ( ((current_bg > bg_ptr[SPECVALUE_BG_INDX]) && (current_bg <= bg_ptr[HYPOLOW_BG_INDX])) 
-					 && ((lastAlertTime == 0) || (lastAlertTime == HYPOLOW_SNZ_MIN)) ) 
-					 || ( ((current_bg > bg_ptr[SPECVALUE_BG_INDX]) && (current_bg <= bg_ptr[HYPOLOW_BG_INDX])) && (!hypolow_overwrite) ) ) {
-			
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, HYPO LOW BG ALERT");
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime HYPO LOW SNOOZE VALUE IN: %i", lastAlertTime);
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "hypolow_overwrite IN: %i", hypolow_overwrite);
-			
-			// send alert and handle a bouncing connection
-			if ((lastAlertTime == 0) || (!hypolow_overwrite)) { 
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, HYPO LOW: VIBRATE");
-				alert_handler_cgm(HYPOLOWBG_VIBE);				
-				if (lastAlertTime == 0) { lastAlertTime = 1; }
-				if (!hypolow_overwrite) { hypolow_overwrite = true; }
-			}
-			
-			// if hit snooze, reset snooze counter; will alert next time around
-			if (lastAlertTime == HYPOLOW_SNZ_MIN) { 
-				lastAlertTime = 0;
-				specvalue_overwrite = false;
-				hypolow_overwrite = false;
-				biglow_overwrite = false;
-//				midlow_overwrite = false;
-//				low_overwrite = false;
-			}
-			
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime HYPO LOW SNOOZE VALUE OUT: %i", lastAlertTime);
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "hypolow_overwrite OUT: %i", hypolow_overwrite);
-		} // else if HYPO LOW BG
 		
-		// check for BIG LOW BG
-		else if ( ( ((current_bg > bg_ptr[HYPOLOW_BG_INDX]) && (current_bg <= bg_ptr[BIGLOW_BG_INDX])) 
-				 && ((lastAlertTime == 0) || (lastAlertTime == BIGLOW_SNZ_MIN)) ) 
-				 || ( ((current_bg > bg_ptr[HYPOLOW_BG_INDX]) && (current_bg <= bg_ptr[BIGLOW_BG_INDX])) && (!biglow_overwrite) ) ) {
+	} // else if current bg <= 0
 			
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, BIG LOW BG ALERT");
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime BIG LOW SNOOZE VALUE IN: %i", lastAlertTime);
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "biglow_overwrite IN: %i", biglow_overwrite);
-			
-			// send alert and handle a bouncing connection
-			if ((lastAlertTime == 0) || (!biglow_overwrite)) { 
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, BIG LOW: VIBRATE");
-				alert_handler_cgm(BIGLOWBG_VIBE);				
-				if (lastAlertTime == 0) { lastAlertTime = 1; }
-				if (!biglow_overwrite) { biglow_overwrite = true; }
-			}
-			
-			// if hit snooze, reset snooze counter; will alert next time around
-			if (lastAlertTime == BIGLOW_SNZ_MIN) { 
-				lastAlertTime = 0;
-				specvalue_overwrite = false;
-				hypolow_overwrite = false;
-				biglow_overwrite = false;
-//				midlow_overwrite = false;
-//				low_overwrite = false;
-			}
-			
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime BIG LOW SNOOZE VALUE OUT: %i", lastAlertTime);
-			//APP_LOG(APP_LOG_LEVEL_DEBUG, "biglow_overwrite OUT: %i", biglow_overwrite);
-			} // else if BIG LOW BG
-	 
-			// check for MID LOW BG
-			else if ( ( ((current_bg > bg_ptr[BIGLOW_BG_INDX]) && (current_bg <= bg_ptr[MIDLOW_BG_INDX])) 
-						 && ((lastAlertTime == 0) || (lastAlertTime == MIDLOW_SNZ_MIN)) ) 
-					 || ( ((current_bg > bg_ptr[BIGLOW_BG_INDX]) && (current_bg <= bg_ptr[MIDLOW_BG_INDX])) && (!midlow_overwrite) ) ) {
-			
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, MID LOW BG ALERT");
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime MID LOW SNOOZE VALUE IN: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "midlow_overwrite IN: %i", midlow_overwrite);
-			
-				// send alert and handle a bouncing connection
-				if ((lastAlertTime == 0) || (!midlow_overwrite)) { 
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, MID LOW: VIBRATE");
-					alert_handler_cgm(LOWBG_VIBE);				
-					if (lastAlertTime == 0) { lastAlertTime = 1; }
-					if (!midlow_overwrite) { midlow_overwrite = true; }
-				}
-			
-				// if hit snooze, reset snooze counter; will alert next time around
-				if (lastAlertTime == MIDLOW_SNZ_MIN) { 
-					lastAlertTime = 0;
-					specvalue_overwrite = false;
-					hypolow_overwrite = false;
-					biglow_overwrite = false;
-					midlow_overwrite = false;
-					low_overwrite = false;
-				}
-			
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime MID LOW SNOOZE VALUE OUT: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "midlow_overwrite OUT: %i", midlow_overwrite);
-			} // else if MID HIGH BG
-
-			// check for LOW BG
-			else if ( ( ((current_bg > bg_ptr[MIDLOW_BG_INDX]) && (current_bg <= bg_ptr[LOW_BG_INDX])) 
-							 && ((lastAlertTime == 0) || (lastAlertTime == LOW_SNZ_MIN)) )
-						 || ( ((current_bg > bg_ptr[MIDLOW_BG_INDX]) && (current_bg <= bg_ptr[LOW_BG_INDX])) && (!low_overwrite) ) ) {
-			
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, LOW BG ALERT");
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime LOW SNOOZE VALUE IN: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "low_overwrite IN: %i", low_overwrite);
-			
-				// send alert and handle a bouncing connection
-				if ((lastAlertTime == 0) || (!low_overwrite)) { 
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, LOW: VIBRATE");
-					alert_handler_cgm(LOWBG_VIBE); 
-					if (lastAlertTime == 0) { lastAlertTime = 1; }
-					if (!low_overwrite) { low_overwrite = true; }
-				}
-			
-				// if hit snooze, reset snooze counter; will alert next time around
-				if (lastAlertTime == LOW_SNZ_MIN) {
-					lastAlertTime = 0; 
-					specvalue_overwrite = false;
-					hypolow_overwrite = false;
-					biglow_overwrite = false;
-					midlow_overwrite = false;
-					low_overwrite = false;
-				}
-			
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime LOW SNOOZE VALUE OUT: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "low_overwrite OUT: %i", low_overwrite);
-			}	// else if LOW BG
-			
-			// check for HIGH BG
-			else if ( ( ((current_bg >= bg_ptr[HIGH_BG_INDX]) && (current_bg < bg_ptr[MIDHIGH_BG_INDX])) 
-						 && ((lastAlertTime == 0) || (lastAlertTime == HIGH_SNZ_MIN)) ) 
-					 || ( ((current_bg >= bg_ptr[HIGH_BG_INDX]) && (current_bg < bg_ptr[MIDHIGH_BG_INDX])) && (!high_overwrite) ) ) {
-			
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, HIGH BG ALERT");	 
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime HIGH SNOOZE VALUE IN: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "high_overwrite IN: %i", high_overwrite);
-			
-				// send alert and handle a bouncing connection
-				if ((lastAlertTime == 0) || (!high_overwrite)) {	
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, HIGH: VIBRATE");
-					alert_handler_cgm(HIGHBG_VIBE);
-					if (lastAlertTime == 0) { lastAlertTime = 1; }
-					if (!high_overwrite) { high_overwrite = true; }
-				}
-			 
-				// if hit snooze, reset snooze counter; will alert next time around
-				if (lastAlertTime == HIGH_SNZ_MIN) {
-					lastAlertTime = 0; 
-					specvalue_overwrite = false;
-					high_overwrite = false;
-					midhigh_overwrite = false;
-					bighigh_overwrite = false;
-				} 
-			 
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime HIGH SNOOZE VALUE OUT: %i", lastAlertTime);
-			} // else if HIGH BG
-		
-			// check for MID HIGH BG
-			else if ( ( ((current_bg >= bg_ptr[MIDHIGH_BG_INDX]) && (current_bg < bg_ptr[BIGHIGH_BG_INDX])) 
-							 && ((lastAlertTime == 0) || (lastAlertTime == MIDHIGH_SNZ_MIN)) )
-						 || ( ((current_bg >= bg_ptr[MIDHIGH_BG_INDX]) && (current_bg < bg_ptr[BIGHIGH_BG_INDX])) && (!midhigh_overwrite) ) ) {	
-			
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, MID HIGH BG ALERT");
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime MID HIGH SNOOZE VALUE IN: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "midhigh_overwrite IN: %i", midhigh_overwrite);
-			
-				// send alert and handle a bouncing connection
-				if ((lastAlertTime == 0) || (!midhigh_overwrite)) { 
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, MID HIGH: VIBRATE");
-					alert_handler_cgm(HIGHBG_VIBE);
-					if (lastAlertTime == 0) { lastAlertTime = 1; }
-					if (!midhigh_overwrite) { midhigh_overwrite = true; }
-				}
-			
-				// if hit snooze, reset snooze counter; will alert next time around
-				if (lastAlertTime == MIDHIGH_SNZ_MIN) { 
-					lastAlertTime = 0; 
-					specvalue_overwrite = false;
-					high_overwrite = false;
-					midhigh_overwrite = false;
-					bighigh_overwrite = false;
-				} 
-			
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime MID HIGH SNOOZE VALUE OUT: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "midhigh_overwrite OUT: %i", midhigh_overwrite);
-			} // else if MID HIGH BG
-	*/
-			// check for BIG HIGH BG
-/*			else if ( ( (current_bg >= bg_ptr[BIGHIGH_BG_INDX]) 
-					 && ((lastAlertTime == 0) || (lastAlertTime == BIGHIGH_SNZ_MIN)) )
-					 || ((current_bg >= bg_ptr[BIGHIGH_BG_INDX]) && (!bighigh_overwrite)) ) {	 
-			
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, BIG HIGH BG ALERT");
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime BIG HIGH SNOOZE VALUE IN: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "bighigh_overwrite IN: %i", bighigh_overwrite);
-			
-				// send alert and handle a bouncing connection
-				if ((lastAlertTime == 0) || (!bighigh_overwrite)) {
-					//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, BIG HIGH: VIBRATE");
-					alert_handler_cgm(BIGHIGHBG_VIBE);
-					if (lastAlertTime == 0) { lastAlertTime = 1; }
-					if (!bighigh_overwrite) { bighigh_overwrite = true; }
-				}
-			
-				// if hit snooze, reset snooze counter; will alert next time around
-				if (lastAlertTime == BIGHIGH_SNZ_MIN) { 
-					lastAlertTime = 0;
-					specvalue_overwrite = false;
-//					high_overwrite = false;
-//					midhigh_overwrite = false;
-					bighigh_overwrite = false;
-				} 
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "lastAlertTime BIG HIGH SNOOZE VALUE OUT: %i", lastAlertTime);
-				//APP_LOG(APP_LOG_LEVEL_DEBUG, "bighigh_overwrite OUT: %i", bighigh_overwrite);
-			} // else if BIG HIGH BG
-
-			// else "normal" range or init code
-			else if ( ((current_bg > bg_ptr[LOW_BG_INDX]) && (current_bg < bg_ptr[HIGH_BG_INDX])) 
-							|| (current_bg <= 0) ) {
-			
-				// do nothing; just reset snooze counter
-				lastAlertTime = 0;
-			} // else if "NORMAL RANGE" BG
-*/		
-		} // else if current bg <= 0
-			
-		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, FUNCTION OUT");
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BG, FUNCTION OUT, SNOOZE VALUE: %d", lastAlertTime);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, FUNCTION OUT");
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BG, FUNCTION OUT, SNOOZE VALUE: %d", lastAlertTime);
 	
 } // end load_bg
 
@@ -1730,16 +1437,12 @@ static void load_battlevel() {
 	
 	// CODE START
 	
-	// initialize inverter layer to hide
-//	layer_set_hidden((Layer *)inv_battlevel_layer, true);
-		
 	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BATTLEVEL, LAST BATTLEVEL: %s", last_battlevel);
 	
 	if (strcmp(last_battlevel, " ") == 0) {
 		// Init code or no battery, can't do battery; set text layer & icon to empty value 
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, NO BATTERY");
 		text_layer_set_text(battlevel_layer, "");
-		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]); 
 		LowBatteryAlert = false;		
 		return;
 	}
@@ -1748,14 +1451,11 @@ static void load_battlevel() {
 		// Zero battery level; set here, so if we get zero later we know we have an error instead
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, SET STRING");
 		text_layer_set_text(battlevel_layer, "0%");
-//		layer_set_hidden((Layer *)inv_battlevel_layer, false);
 		if (!LowBatteryAlert) {
 			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, VIBRATE");
 			alert_handler_cgm(LOWBATTERY_VIBE);
 			LowBatteryAlert = true;
 		}		
-		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, SET ICON");
-		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTEMPTY_ICON_INDX]);
 		return;
 	}
 	
@@ -1767,8 +1467,6 @@ static void load_battlevel() {
 		// got a negative or out of bounds or error battery level
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, UNKNOWN, ERROR BATTERY");
 		text_layer_set_text(battlevel_layer, "ERR");
-//		layer_set_hidden((Layer *)inv_battlevel_layer, false);
-		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]);
 		return;
 	}
 			
@@ -1943,8 +1641,13 @@ void window_load_cgm(Window *window_cgm) {
 	
 	// DELTA BG
 	message_layer = text_layer_create(GRect(0, 33, 144, 55));
-	text_layer_set_text_color(message_layer, GColorBlack);
-	text_layer_set_background_color(message_layer, GColorWhite);
+	#ifdef PBL_COLOR
+		text_layer_set_text_color(message_layer, GColorDukeBlue);
+		text_layer_set_background_color(message_layer, GColorWhite);
+	#else
+		text_layer_set_text_color(message_layer, GColorBlack);
+		text_layer_set_background_color(message_layer, GColorWhite);
+	#endif
 	text_layer_set_font(message_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
 	text_layer_set_text_alignment(message_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(message_layer));
@@ -1963,51 +1666,44 @@ void window_load_cgm(Window *window_cgm) {
 
 	// APP TIME AGO READING
 	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
-	text_layer_set_text_color(time_app_layer, GColorBlack);
-	text_layer_set_background_color(time_app_layer, GColorClear);
+	#ifdef PBL_COLOR
+		text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+		text_layer_set_background_color(time_app_layer, GColorWhite);
+	#else
+		text_layer_set_text_color(time_app_layer, GColorBlack);
+		text_layer_set_background_color(time_app_layer, GColorClear);
+	#endif
 	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
 	
 	// BG
 	bg_layer = text_layer_create(GRect(0, -5, 95, 47));
-	text_layer_set_text_color(bg_layer, GColorBlack);
-	text_layer_set_background_color(bg_layer, GColorWhite);
+	#ifdef PBL_COLOR
+		text_layer_set_text_color(bg_layer, GColorDukeBlue);
+		text_layer_set_background_color(bg_layer, GColorWhite);
+	#else
+		text_layer_set_text_color(bg_layer, GColorBlack);
+		text_layer_set_background_color(bg_layer, GColorWhite);
+	#endif
 	text_layer_set_font(bg_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_alignment(bg_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(bg_layer));
 
-	// CGM TIME AGO ICON
-	//cgmicon_layer = bitmap_layer_create(GRect(5, 63, 40, 24));
-	//bitmap_layer_set_alignment(cgmicon_layer, GAlignLeft);
-	//bitmap_layer_set_background_color(cgmicon_layer, GColorWhite);
-	//layer_add_child(window_layer_cgm, bitmap_layer_get_layer(cgmicon_layer));	
 	
 	// CGM TIME AGO READING
-	//cgmtime_layer = text_layer_create(GRect(28, 58, 40, 24));
 	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
-	text_layer_set_text_color(cgmtime_layer, GColorBlack);
-	text_layer_set_background_color(cgmtime_layer, GColorClear);
+	#ifdef PBL_COLOR
+		text_layer_set_text_color(cgmtime_layer, GColorDukeBlue);
+		text_layer_set_background_color(cgmtime_layer, GColorWhite);
+	#else
+		text_layer_set_text_color(cgmtime_layer, GColorBlack);
+		text_layer_set_background_color(cgmtime_layer, GColorClear);
+	#endif
 	text_layer_set_font(cgmtime_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text_alignment(cgmtime_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(cgmtime_layer));
 
-	// T1D NAME
-/*	t1dname_layer = text_layer_create(GRect(5, 138, 69, 28));
-	text_layer_set_text_color(t1dname_layer, GColorWhite);
-	text_layer_set_background_color(t1dname_layer, GColorClear);
-	text_layer_set_font(t1dname_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text_alignment(t1dname_layer, GTextAlignmentLeft);
-	layer_add_child(window_layer_cgm, text_layer_get_layer(t1dname_layer));
-*/
-	// BATTERY LEVEL ICON
-/*	batticon_layer = bitmap_layer_create(GRect(80, 147, 28, 20));
-	bitmap_layer_set_alignment(batticon_layer, GAlignLeft);
-	bitmap_layer_set_background_color(batticon_layer, GColorBlack);
-	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(batticon_layer));
-*/
-	// BATTERY LEVEL
-//	battlayer = text_layer_create(GRect(110, 144, 38, 20));
 	battlevel_layer = text_layer_create(GRect(0, 148, 55, 18));
 	text_layer_set_text_color(battlevel_layer, GColorWhite);
 	text_layer_set_background_color(battlevel_layer, GColorBlack);
@@ -2032,10 +1728,6 @@ void window_load_cgm(Window *window_cgm) {
 	text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
 
-	// INVERTER BATTERY LAYER
-/*	inv_battlevel_layer = inverter_layer_create(GRect(110, 149, 38, 15));
-	layer_add_child(window_get_root_layer(window_cgm), inverter_layer_get_layer(inv_battlevel_layer));
-*/
 	// CURRENT ACTUAL TIME FROM WATCH
 	time_watch_layer = text_layer_create(GRect(0, 82, 144, 44));
 	text_layer_set_text_color(time_watch_layer, GColorWhite);
