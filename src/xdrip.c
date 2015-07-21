@@ -135,7 +135,7 @@ static const uint8_t LOWBATTERY_VIBE = 1;
 // RANGE 0-240
 // IF YOU WANT TO WAIT LONGER TO GET CONDITION, INCREASE NUMBER
 static const uint8_t CGMOUT_WAIT_MIN = 15;
-static const uint8_t PHONEOUT_WAIT_MIN = 3;
+static const uint8_t PHONEOUT_WAIT_MIN = 8;
 
 // Control Messages
 // IF YOU DO NOT WANT A SPECIFIC MESSAGE, SET TO true
@@ -154,13 +154,15 @@ static const bool TurnOffStrongVibrations = false;
 // THIS IS ONLY FOR BAD BLUETOOTH CONNECTIONS
 // TRY EXTENDING THIS TIME TO SEE IF IT WILL HELP SMOOTH CONNECTION
 // CGM DATA RECEIVED EVERY 60 SECONDS, GOING BEYOND THAT MAY RESULT IN MISSED DATA
-static const uint8_t BT_ALERT_WAIT_SECS = 45;
+static const uint8_t BT_ALERT_WAIT_SECS = 10;
 
 // ** END OF CONSTANTS THAT CAN BE CHANGED; DO NOT CHANGE IF YOU DO NOT KNOW WHAT YOU ARE DOING **
 
 // Message Timer Wait Times, in Seconds
-static const uint8_t WATCH_MSGSEND_SECS = 60;
-static const uint8_t LOADING_MSGSEND_SECS = 4;
+static const uint16_t WATCH_MSGSEND_SECS = 60;
+static const uint8_t LOADING_MSGSEND_SECS = 2;
+static uint8_t minutes_cgm = 0;
+
 
 enum CgmKey {
 	CGM_ICON_KEY = 0x0,		// TUPLE_CSTRING, MAX 2 BYTES (10)
@@ -368,11 +370,32 @@ static void battery_handler(BatteryChargeState charge_state) {
 	snprintf(watch_battlevel_percent, 7, "W:%i%%", charge_state.charge_percent);
 	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
 	if(charge_state.is_charging) {
+		#ifdef PBL_COLOR
+		text_layer_set_text_color(watch_battlevel_layer, GColorDukeBlue);
+		text_layer_set_background_color(watch_battlevel_layer, GColorGreen);
+		#else
 		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
 		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
+		#endif
 	} else {
+		#ifdef PBL_COLOR
+		//APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
+		if(charge_state.charge_percent > 40) {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 40");
+			text_layer_set_text_color(watch_battlevel_layer, GColorGreen);
+		} else if (charge_state.charge_percent > 20) {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 20");
+			text_layer_set_text_color(watch_battlevel_layer, GColorYellow);
+		} else {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY <= 20");
+			text_layer_set_text_color(watch_battlevel_layer, GColorRed);
+		}
+		text_layer_set_background_color(watch_battlevel_layer, GColorDukeBlue);
+		#else	
+		//APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
 		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
+		#endif
 	}	
 
 
@@ -380,7 +403,7 @@ static void battery_handler(BatteryChargeState charge_state) {
 
 static void alert_handler_cgm(uint8_t alertValue) {
 	//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER");
-	//APP_LOG(APP_LOG_LEVEL_DEBUG, "ALERT CODE: %d", alertValue);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "ALERT CODE: %d", alertValue);
 	
 	// CONSTANTS
 	// constants for vibrations patterns; has to be uint32_t, measured in ms, maximum duration 10000ms
@@ -416,7 +439,7 @@ static void alert_handler_cgm(uint8_t alertValue) {
 		
 	case 1:;
 			//Low
-			//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: LOW ALERT");
+			APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: LOW ALERT");
 			VibePattern low_alert_pat = {
 				.durations = lowalert_beebuzz,
 				.num_segments = LOWALERT_BEEBUZZ_STRONG,
@@ -427,7 +450,7 @@ static void alert_handler_cgm(uint8_t alertValue) {
 
 	case 2:;
 			// Medium Alert
-			//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: MEDIUM ALERT");
+			APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: MEDIUM ALERT");
 			VibePattern med_alert_pat = {
 				.durations = medalert_long,
 				.num_segments = MEDALERT_LONG_STRONG,
@@ -438,7 +461,7 @@ static void alert_handler_cgm(uint8_t alertValue) {
 
 	case 3:;
 			// High Alert
-			//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: HIGH ALERT");
+			APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER: HIGH ALERT");
 			VibePattern high_alert_pat = {
 			.durations = highalert_fast,
 			.num_segments = HIGHALERT_FAST_STRONG,
@@ -459,59 +482,66 @@ void handle_bluetooth_cgm(bool bt_connected) {
 	if (bt_connected == false)
 	{
 	
-	// Check BluetoothAlert for extended Bluetooth outage; if so, do nothing
-	if (BluetoothAlert) {
+		// Check BluetoothAlert for extended Bluetooth outage; if so, do nothing
+		if (BluetoothAlert) {
 			//Already vibrated and set message; out
-		return;
-	}
-	
-	// Check to see if the BT_timer needs to be set; if BT_timer is not null we're still waiting
-	if (BT_timer == NULL) {
-		// check to see if timer has popped
-		if (!BT_timer_pop) {
-			//set timer
-			BT_timer = app_timer_register((BT_ALERT_WAIT_SECS*MS_IN_A_SECOND), BT_timer_callback, NULL);
-		// have set timer; next time we come through we will see that the timer has popped
-		return;
-		}
-	}
-	else {
-		// BT_timer is not null and we're still waiting
-		return;
+			return;
 		}
 	
-	// timer has popped
-	// Vibrate; BluetoothAlert takes over until Bluetooth connection comes back on
-	//APP_LOG(APP_LOG_LEVEL_INFO, "BT HANDLER: TIMER POP, NO BLUETOOTH");
+		// Check to see if the BT_timer needs to be set; if BT_timer is not null we're still waiting
+		if (BT_timer == NULL) {
+			// check to see if timer has popped
+			if (!BT_timer_pop) {
+				//set timer
+				BT_timer = app_timer_register((BT_ALERT_WAIT_SECS*MS_IN_A_SECOND), BT_timer_callback, NULL);
+				// have set timer; next time we come through we will see that the timer has popped
+			return;
+			}
+		}
+		else {
+			// BT_timer is not null and we're still waiting
+			return;
+		}
+	
+		// timer has popped
+		// Vibrate; BluetoothAlert takes over until Bluetooth connection comes back on
+		APP_LOG(APP_LOG_LEVEL_INFO, "BT HANDLER: TIMER POP, NO BLUETOOTH");
 		alert_handler_cgm(BTOUT_VIBE);
 		BluetoothAlert = true;
 	
-	// Reset timer pop
-	BT_timer_pop = false;
+		// Reset timer pop
+		BT_timer_pop = false;
 	
-	//APP_LOG(APP_LOG_LEVEL_INFO, "NO BLUETOOTH");
+		//APP_LOG(APP_LOG_LEVEL_INFO, "NO BLUETOOTH");
 		if (!TurnOff_NOBLUETOOTH_Msg) {
-		text_layer_set_text(message_layer, "NO BLUETOOTH");
-	}
+			#ifdef PBL_COLOR
+			text_layer_set_text_color(message_layer, GColorRed);
+			#endif
+			text_layer_set_text(message_layer, "NO BLUETOOTH");
+		} 
 		
 		// erase cgm and app ago times
 		text_layer_set_text(cgmtime_layer, "");
 		text_layer_set_text(time_app_layer, "");
 		
-	// erase cgm icon
+		// erase cgm icon
 		//create_update_bitmap(&cgmicon_bitmap,cgmicon_layer,TIMEAGO_ICONS[NONE_TIMEAGO_ICON_INDX]);
 		// turn phone icon off
 		create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEOFF_ICON_INDX]);
 	}
 		
 	else {
-	// Bluetooth is on, reset BluetoothAlert
+		// Bluetooth is on, reset BluetoothAlert
 		//APP_LOG(APP_LOG_LEVEL_INFO, "HANDLE BT: BLUETOOTH ON");
-	BluetoothAlert = false;
+		BluetoothAlert = false;
 		if (BT_timer == NULL) {
 			// no timer is set, so need to reset timer pop
 			BT_timer_pop = false;
 		}
+		#ifdef PBL_COLOR
+		text_layer_set_text_color(message_layer, GColorBlack);
+		#endif
+
 	}
 	
 	//APP_LOG(APP_LOG_LEVEL_INFO, "BluetoothAlert: %i", BluetoothAlert);
@@ -582,6 +612,7 @@ void sync_error_callback_cgm(DictionaryResult appsync_dict_error, AppMessageResu
 	}
 	
 	appsync_err_openerr = app_message_outbox_begin(&iter);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "APP SYNC OPEN ERR CODE: %i RES: %s", appsync_err_openerr, translate_app_error(appsync_err_openerr));
 	
 	if (appsync_err_openerr == APP_MSG_OK) {
 		// reset AppSyncErrAlert to flag for vibrate
@@ -589,6 +620,7 @@ void sync_error_callback_cgm(DictionaryResult appsync_dict_error, AppMessageResu
 	
 		// send message
 		appsync_err_senderr = app_message_outbox_send();
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "APP SYNC SEND ERR CODE: %i RES: %s", appsync_err_senderr, translate_app_error(appsync_err_senderr));
 		if (appsync_err_senderr != APP_MSG_OK  && appsync_err_senderr != APP_MSG_BUSY && appsync_err_senderr != APP_MSG_SEND_REJECTED) {
 			APP_LOG(APP_LOG_LEVEL_INFO, "APP SYNC SEND ERROR");
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "APP SYNC SEND ERR CODE: %i RES: %s", appsync_err_senderr, translate_app_error(appsync_err_senderr));
@@ -624,7 +656,7 @@ void sync_error_callback_cgm(DictionaryResult appsync_dict_error, AppMessageResu
 
 	// check if need to vibrate
 	if (!AppSyncErrAlert) {
-		//APP_LOG(APP_LOG_LEVEL_INFO, "APPSYNC ERROR: VIBRATE");
+		APP_LOG(APP_LOG_LEVEL_INFO, "APPSYNC ERROR: VIBRATE");
 		alert_handler_cgm(APPSYNC_ERR_VIBE);
 		AppSyncErrAlert = true;
 	} 
@@ -695,8 +727,8 @@ void inbox_dropped_handler_cgm(AppMessageResult appmsg_indrop_error, void *conte
 
 	// check if need to vibrate
 	if (!AppMsgInDropAlert) {
-			//APP_LOG(APP_LOG_LEVEL_INFO, "APPMSG IN DROP ERROR: VIBRATE");
-			alert_handler_cgm(APPMSG_INDROP_VIBE);
+		APP_LOG(APP_LOG_LEVEL_INFO, "APPMSG IN DROP ERROR: VIBRATE");
+		alert_handler_cgm(APPMSG_INDROP_VIBE);
 		AppMsgInDropAlert = true;
 	} 
 		
@@ -766,7 +798,7 @@ void outbox_failed_handler_cgm(DictionaryIterator *failed, AppMessageResult appm
 
 	// check if need to vibrate
 	if (!AppMsgOutFailAlert) {
-		//APP_LOG(APP_LOG_LEVEL_INFO, "APPMSG OUT FAIL ERROR: VIBRATE");
+		APP_LOG(APP_LOG_LEVEL_INFO, "APPMSG OUT FAIL ERROR: VIBRATE");
 		alert_handler_cgm(APPMSG_OUTFAIL_VIBE);
 		AppMsgOutFailAlert = true;
 	} 
@@ -853,7 +885,7 @@ static void load_icon() {
 			}
 			else if (strcmp(current_icon, DOUBLEDOWN_ARROW) == 0) {
 			if (!DoubleDownAlert) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD ICON, ICON ARROW: DOUBLE DOWN");
+				APP_LOG(APP_LOG_LEVEL_INFO, "LOAD ICON, ICON ARROW: DOUBLE DOWN");
 				alert_handler_cgm(DOUBLEDOWN_VIBE);
 				DoubleDownAlert = true;
 			}
@@ -1100,7 +1132,7 @@ static void load_bg() {
 		 
 			// send alert and handle a bouncing connection
 			if ((lastAlertTime == 0) || (!specvalue_overwrite)) { 
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, SPECIAL VALUE: VIBRATE");
+				APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, SPECIAL VALUE: VIBRATE");
 				alert_handler_cgm(SPECVALUE_VIBE);				
 				// don't know where we are coming from, so reset last alert time no matter what
 				// set to 1 to prevent bouncing connection
@@ -1204,7 +1236,7 @@ static void load_cgmtime() {
 		
 			// Vibrate if we need to
 			if ((!CGMOffAlert) && (!PhoneOffAlert)) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD CGMTIME, CGM TIMEAGO: VIBRATE");
+				APP_LOG(APP_LOG_LEVEL_INFO, "LOAD CGMTIME, CGM TIMEAGO: VIBRATE");
 				alert_handler_cgm(CGMOUT_VIBE);
 				CGMOffAlert = true;
 			}
@@ -1235,7 +1267,7 @@ static void load_apptime(){
 	// initialize label buffer and icon
 	strncpy(app_label_buffer, "", LABEL_BUFFER_SIZE);		
 				
-	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, NEW APP TIME: %lu", current_app_time);
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, NEW APP TIME: %lu", current_app_time);
 		
 	// check for init or error code
 	if (current_app_time == 0) {	 
@@ -1286,6 +1318,7 @@ static void load_apptime(){
 			
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, CHECK FOR PHONE OFF ICON");
 		// check to see if we need to set phone off icon
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d, PHONEOUT_WAIT_MIN: %d", app_timeago_diff, PHONEOUT_WAIT_MIN);
 		if ( (app_timeago_diff >= PHONEOUT_WAIT_MIN) || ( (strcmp(app_label_buffer, "") != 0) && (strcmp(app_label_buffer, "m") != 0) ) ) {
 			// set phone off icon
 			create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEOFF_ICON_INDX]); 
@@ -1297,7 +1330,7 @@ static void load_apptime(){
 			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, CHECK IF HAVE TO VIBRATE");
 			// Vibrate if we need to
 			if (!PhoneOffAlert) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, READ APP TIMEAGO: VIBRATE");
+				APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, READ APP TIMEAGO: VIBRATE");
 				alert_handler_cgm(PHONEOUT_VIBE);
 				PhoneOffAlert = true;
 			}
@@ -1417,15 +1450,21 @@ static void load_bg_delta() {
 	}
 	if((currentBG_isMMOL && current_bg == 55) || (!currentBG_isMMOL && (current_bg == 100 || current_bg == 99))) {
 		text_layer_set_text(message_layer, "BAZINGA!");
+		#ifdef PBL_COLOR
+		text_layer_set_text_color(message_layer, GColorDukeBlue);
+		#endif
 	} else {
 
 		text_layer_set_text(message_layer, formatted_bg_delta);
+		#ifdef PBL_COLOR
+		text_layer_set_text_color(message_layer,GColorBlack);
+		#endif
 	}
 	
 } // end load_bg_delta
 
 static void load_battlevel() {
-		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, FUNCTION START");
+	//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, FUNCTION START");
 
 	// CONSTANTS
 	
@@ -1452,7 +1491,7 @@ static void load_battlevel() {
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, SET STRING");
 		text_layer_set_text(battlevel_layer, "0%");
 		if (!LowBatteryAlert) {
-			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, VIBRATE");
+			APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, VIBRATE");
 			alert_handler_cgm(LOWBATTERY_VIBE);
 			LowBatteryAlert = true;
 		}		
@@ -1470,18 +1509,23 @@ static void load_battlevel() {
 		return;
 	}
 			
-		// get current battery level and set battery level text with percent
-		snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "B:%i%%", current_battlevel);
-		text_layer_set_text(battlevel_layer, battlevel_percent);
-
-		 if ( (current_battlevel > 0) && (current_battlevel <= 10) ) {
-			if (!LowBatteryAlert) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, LOW BATTERY, 5 OR LESS, VIBRATE");
-				alert_handler_cgm(LOWBATTERY_VIBE);
-				LowBatteryAlert = true;
-			}		
-		}
-	
+	// get current battery level and set battery level text with percent
+	snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "B:%i%%", current_battlevel);
+	text_layer_set_text(battlevel_layer, battlevel_percent);
+	#ifdef PBL_COLOR
+	if ( (current_battlevel > 0) && (current_battlevel <= 30) ) {
+		text_layer_set_text_color(battlevel_layer, GColorRed);
+		if (!LowBatteryAlert) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, LOW BATTERY, 5 OR LESS, VIBRATE");
+			alert_handler_cgm(LOWBATTERY_VIBE);
+			LowBatteryAlert = true;
+		}		
+	} else if ( (current_battlevel > 30) && (current_battlevel <= 50) ) {
+		text_layer_set_text_color(battlevel_layer, GColorYellow);
+	} else {
+		text_layer_set_text_color(battlevel_layer, GColorGreen);
+	}
+	#endif
 	//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, END FUNCTION");
 } // end load_battlevel
 
@@ -1514,6 +1558,11 @@ void sync_tuple_changed_callback_cgm(const uint32_t key, const Tuple* new_tuple,
 		//APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: READ CGM TIME");
 		current_cgm_time = new_tuple->value->uint32;
 		load_cgmtime();
+		// as long as current_cgm_time is not zero, we know we have gotten an update from the app,
+		// so we reset minutes_cgm to 6, so the pebble doesn't request another one.
+		if (current_cgm_time != 0) {		
+			minutes_cgm = 6;
+		}
 		break; // break for CGM_TCGM_KEY
 
 	case CGM_TAPP_KEY:;
@@ -1581,10 +1630,20 @@ void timer_callback_cgm(void *data) {
 	if (timer_cgm != NULL) {
 		timer_cgm = NULL;
 	}
+	//minutes_cgm tracks the minutes since the last update sent from the pebble.
+	// if it reaches 0, we have not received an update in 6 minutes, so we ask for one.
+	//This limits the number of messages the pebble sends, and therefore improves battery life.
 	
-	// send message
-	send_cmd_cgm();
-	
+	//APP_LOG(APP_LOG_LEVEL_INFO, "minutes_cgm: %d", minutes_cgm);
+	if (minutes_cgm == 0) {
+		minutes_cgm = 6;
+		// send message
+		send_cmd_cgm();
+	} else {
+		minutes_cgm--;
+		load_cgmtime();
+	}
+	APP_LOG(APP_LOG_LEVEL_INFO, "minutes_cgm: %d", minutes_cgm);
 	//APP_LOG(APP_LOG_LEVEL_INFO, "TIMER CALLBACK, SEND CMD DONE, ABOUT TO REGISTER TIMER");
 	// set msg timer
 	timer_cgm = app_timer_register((WATCH_MSGSEND_SECS*MS_IN_A_SECOND), timer_callback_cgm, NULL);
@@ -1640,15 +1699,17 @@ void window_load_cgm(Window *window_cgm) {
 	window_layer_cgm = window_get_root_layer(window_cgm);
 	
 	// DELTA BG
-	message_layer = text_layer_create(GRect(0, 33, 144, 55));
 	#ifdef PBL_COLOR
-		text_layer_set_text_color(message_layer, GColorDukeBlue);
-		text_layer_set_background_color(message_layer, GColorWhite);
+	message_layer = text_layer_create(GRect(0, 33, 144, 50));
+	text_layer_set_text_color(message_layer, GColorDukeBlue);
+	text_layer_set_background_color(message_layer, GColorWhite);
+	text_layer_set_font(message_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	#else
-		text_layer_set_text_color(message_layer, GColorBlack);
-		text_layer_set_background_color(message_layer, GColorWhite);
-	#endif
+	message_layer = text_layer_create(GRect(0, 33, 144, 55));
+	text_layer_set_text_color(message_layer, GColorBlack);
+	text_layer_set_background_color(message_layer, GColorWhite);
 	text_layer_set_font(message_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+	#endif
 	text_layer_set_text_alignment(message_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(message_layer));
 
@@ -1659,32 +1720,38 @@ void window_load_cgm(Window *window_cgm) {
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(icon_layer));
 
 	// APP TIME AGO ICON
+	#ifdef PBL_COLOR
 	appicon_layer = bitmap_layer_create(GRect(118, 63, 40, 24));
+	#else
+	appicon_layer = bitmap_layer_create(GRect(118, 63, 40, 24));
+	#endif
 	bitmap_layer_set_alignment(appicon_layer, GAlignLeft);
 	bitmap_layer_set_background_color(appicon_layer, GColorWhite);
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(appicon_layer));	
 
 	// APP TIME AGO READING
-	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
 	#ifdef PBL_COLOR
-		text_layer_set_text_color(time_app_layer, GColorDukeBlue);
-		text_layer_set_background_color(time_app_layer, GColorWhite);
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+	text_layer_set_background_color(time_app_layer, GColorWhite);
 	#else
-		text_layer_set_text_color(time_app_layer, GColorBlack);
-		text_layer_set_background_color(time_app_layer, GColorClear);
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorBlack);
+	text_layer_set_background_color(time_app_layer, GColorClear);
 	#endif
 	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
 	
 	// BG
-	bg_layer = text_layer_create(GRect(0, -5, 95, 47));
 	#ifdef PBL_COLOR
-		text_layer_set_text_color(bg_layer, GColorDukeBlue);
-		text_layer_set_background_color(bg_layer, GColorWhite);
+	bg_layer = text_layer_create(GRect(0, -5, 95, 47));
+	text_layer_set_text_color(bg_layer, GColorDukeBlue);
+	text_layer_set_background_color(bg_layer, GColorWhite);
 	#else
-		text_layer_set_text_color(bg_layer, GColorBlack);
-		text_layer_set_background_color(bg_layer, GColorWhite);
+	bg_layer = text_layer_create(GRect(0, -5, 95, 47));
+	text_layer_set_text_color(bg_layer, GColorBlack);
+	text_layer_set_background_color(bg_layer, GColorWhite);
 	#endif
 	text_layer_set_font(bg_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_alignment(bg_layer, GTextAlignmentCenter);
@@ -1692,21 +1759,29 @@ void window_load_cgm(Window *window_cgm) {
 
 	
 	// CGM TIME AGO READING
-	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
 	#ifdef PBL_COLOR
-		text_layer_set_text_color(cgmtime_layer, GColorDukeBlue);
-		text_layer_set_background_color(cgmtime_layer, GColorWhite);
+	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
+	text_layer_set_text_color(cgmtime_layer, GColorDukeBlue);
+	text_layer_set_background_color(cgmtime_layer, GColorWhite);
 	#else
-		text_layer_set_text_color(cgmtime_layer, GColorBlack);
-		text_layer_set_background_color(cgmtime_layer, GColorClear);
+	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
+	text_layer_set_text_color(cgmtime_layer, GColorBlack);
+	text_layer_set_background_color(cgmtime_layer, GColorClear);
 	#endif
 	text_layer_set_font(cgmtime_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text_alignment(cgmtime_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(cgmtime_layer));
 
-	battlevel_layer = text_layer_create(GRect(0, 148, 55, 18));
+	// PHONE BATTERY LEVEL
+	#ifdef PBL_COLOR
+	battlevel_layer = text_layer_create(GRect(0, 150, 75, 18));
+	text_layer_set_text_color(battlevel_layer, GColorGreen);
+	text_layer_set_background_color(battlevel_layer, GColorDukeBlue);
+	#else
+	battlevel_layer = text_layer_create(GRect(0, 148, 59, 18));
 	text_layer_set_text_color(battlevel_layer, GColorWhite);
 	text_layer_set_background_color(battlevel_layer, GColorBlack);
+	#endif
 	text_layer_set_font(battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(battlevel_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(battlevel_layer));
@@ -1715,31 +1790,70 @@ void window_load_cgm(Window *window_cgm) {
 	BatteryChargeState charge_state=battery_state_service_peek();
 	static char watch_battlevel_percent[7];
 	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
+	#ifdef PBL_COLOR
+	watch_battlevel_layer = text_layer_create(GRect(70, 150, 75, 18));
+	#else
 	watch_battlevel_layer = text_layer_create(GRect(81, 148, 59, 18));
+	#endif
 	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
 	if(charge_state.is_charging) {
+		#ifdef PBL_COLOR
+		text_layer_set_text_color(watch_battlevel_layer, GColorDukeBlue);
+		text_layer_set_background_color(watch_battlevel_layer, GColorGreen);
+		#else
 		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
 		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
+		#endif
 	} else {
+//		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
+//		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
+		#ifdef PBL_COLOR
+		//APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
+		if(charge_state.charge_percent > 40) {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 40");
+			text_layer_set_text_color(watch_battlevel_layer, GColorGreen);
+		} else if (charge_state.charge_percent > 20) {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 20");
+			text_layer_set_text_color(watch_battlevel_layer, GColorYellow);
+		} else {
+			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY <= 20");
+			text_layer_set_text_color(watch_battlevel_layer, GColorRed);
+		}
+		text_layer_set_background_color(watch_battlevel_layer, GColorDukeBlue);
+		#else	
+		//APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
 		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
+		#endif
 	}	
 	text_layer_set_font(watch_battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
 
 	// CURRENT ACTUAL TIME FROM WATCH
+	#ifdef PBL_COLOR
+	time_watch_layer = text_layer_create(GRect(0, 82, 144, 44));
+	text_layer_set_text_color(time_watch_layer, GColorWhite);
+	text_layer_set_background_color(time_watch_layer, GColorDukeBlue);
+	#else
 	time_watch_layer = text_layer_create(GRect(0, 82, 144, 44));
 	text_layer_set_text_color(time_watch_layer, GColorWhite);
 	text_layer_set_background_color(time_watch_layer, GColorClear);
+	#endif
 	text_layer_set_font(time_watch_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_alignment(time_watch_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(time_watch_layer));
 	
 	// CURRENT ACTUAL DATE FROM APP
+	#ifdef PBL_COLOR
+	date_app_layer = text_layer_create(GRect(0, 124, 144, 26));
+	text_layer_set_text_color(date_app_layer, GColorWhite);
+	text_layer_set_background_color(date_app_layer, GColorDukeBlue);
+	#else
 	date_app_layer = text_layer_create(GRect(0, 120, 144, 29));
 	text_layer_set_text_color(date_app_layer, GColorWhite);
 	text_layer_set_background_color(date_app_layer, GColorClear);
+	#endif
 	text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	//text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	text_layer_set_text_alignment(date_app_layer, GTextAlignmentCenter);
