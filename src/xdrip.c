@@ -1642,6 +1642,7 @@ void timer_callback_cgm(void *data) {
 	} else {
 		minutes_cgm--;
 		load_cgmtime();
+		load_bg_delta();
 	}
 	APP_LOG(APP_LOG_LEVEL_INFO, "minutes_cgm: %d", minutes_cgm);
 	//APP_LOG(APP_LOG_LEVEL_INFO, "TIMER CALLBACK, SEND CMD DONE, ABOUT TO REGISTER TIMER");
