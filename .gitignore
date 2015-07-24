@@ -1,6 +1,8 @@
 
 # Ignore build generated files
-build
+!build/
+!build/*.pbw
+build/*
 pebble-screenshot*
 appinfo.json~
 appinfo.json.*
