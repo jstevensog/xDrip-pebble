@@ -1169,7 +1169,10 @@ static void load_cgmtime() {
 	uint32_t current_cgm_timeago = 0;
 	int cgm_timeago_diff = 0;
 	static char formatted_cgm_timeago[10];
-	static char cgm_label_buffer[6];	
+	static char cgm_label_buffer[6];
+	#ifdef PBL_PLATFORM_BASALT
+	static time_t gmtime_now;
+	#endif	
 		
 	// CODE START
 	
@@ -1187,8 +1190,14 @@ static void load_cgmtime() {
 	else {
 		// set rcvr on icon
 		//create_update_bitmap(&cgmicon_bitmap,cgmicon_layer,TIMEAGO_ICONS[RCVRON_ICON_INDX]);
-			
+		
+		#ifdef PBL_PLATFORM_APLITE	
 		time_now = time(NULL);
+		#else
+		gmtime_now = time(NULL);
+		time_now = mktime(localtime(&gmtime_now));
+		#endif
+		
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIME: %lu", current_cgm_time);
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, TIME NOW IN CGM: %lu", time_now);
 				
@@ -1259,6 +1268,9 @@ static void load_apptime(){
 	int app_timeago_diff = 0;
 	static char formatted_app_timeago[10];
 	static char app_label_buffer[6];
+	#ifdef PBL_PLATFORM_BASALT
+	static time_t gmtime_now;
+	#endif	
 		
 	// CODE START
 	
@@ -1278,7 +1290,14 @@ static void load_apptime(){
 		// set phone on icon
 		create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEON_ICON_INDX]);			 
 			 
+		//time_now = time(NULL);
+		#ifdef PBL_PLATFORM_APLITE	
 		time_now = time(NULL);
+		#else
+		gmtime_now = time(NULL);
+		time_now = mktime(localtime(&gmtime_now));
+		#endif
+
 			
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu", time_now);
 			
