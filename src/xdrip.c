@@ -1172,6 +1172,7 @@ static void load_cgmtime() {
 	static char cgm_label_buffer[6];
 	#ifdef PBL_PLATFORM_BASALT
 	static time_t gmtime_now;
+	long time_zone_diff = 0;
 	#endif	
 		
 	// CODE START
@@ -1199,13 +1200,13 @@ static void load_cgmtime() {
 		#endif
 		
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIME: %lu", current_cgm_time);
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, TIME NOW IN CGM: %lu", time_now);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, time_now: %lu, current_cgm_time: %lu", time_now, current_cgm_time);
 				
 		current_cgm_timeago = abs(time_now - current_cgm_time);
 				
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIMEAGO: %lu", current_cgm_timeago);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIMEAGO: %lu", current_cgm_timeago);
 			
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, GM TIME AGO LABEL IN: %s", cgm_label_buffer);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, GM TIME AGO LABEL IN: %s", cgm_label_buffer);
 			
 		if (current_cgm_timeago < MINUTEAGO) {
 			cgm_timeago_diff = 0;
@@ -1236,6 +1237,7 @@ static void load_cgmtime() {
 			
 		text_layer_set_text(cgmtime_layer, formatted_cgm_timeago);
 					
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, GM TIME AGO LABEL IN: %s", cgm_label_buffer);
 		// check to see if we need to show receiver off icon
 		if ( (cgm_timeago_diff >= CGMOUT_WAIT_MIN) || ( (strcmp(cgm_label_buffer, "") != 0) && (strcmp(cgm_label_buffer, "m") != 0) ) ) {
 			// set receiver off icon
@@ -1270,6 +1272,7 @@ static void load_apptime(){
 	static char app_label_buffer[6];
 	#ifdef PBL_PLATFORM_BASALT
 	static time_t gmtime_now;
+	long time_zone_diff = 0;
 	#endif	
 		
 	// CODE START
@@ -1278,7 +1281,8 @@ static void load_apptime(){
 		
 	// initialize label buffer and icon
 	strncpy(app_label_buffer, "", LABEL_BUFFER_SIZE);		
-				
+	
+	
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, NEW APP TIME: %lu", current_app_time);
 		
 	// check for init or error code
@@ -1299,11 +1303,11 @@ static void load_apptime(){
 		#endif
 
 			
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu", time_now);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu, current_app_time: %lu", time_now, current_app_time);
 			
 		current_app_timeago = abs(time_now - current_app_time);
 			
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, CURRENT APP TIMEAGO: %lu", current_app_timeago);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, CURRENT APP TIMEAGO: %lu", current_app_timeago);
 			
 		if (current_app_timeago < (MINUTEAGO)) {
 			app_timeago_diff = 0;
@@ -1332,12 +1336,12 @@ static void load_apptime(){
 			create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[NONE_TIMEAGO_ICON_INDX]);
 		}
 		
-		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, FORMATTED APP TIMEAGO STRING: %s", formatted_app_timeago);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, FORMATTED APP TIMEAGO STRING: %s", formatted_app_timeago);
 		text_layer_set_text(time_app_layer, formatted_app_timeago);
 			
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, CHECK FOR PHONE OFF ICON");
 		// check to see if we need to set phone off icon
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d, PHONEOUT_WAIT_MIN: %d", app_timeago_diff, PHONEOUT_WAIT_MIN);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d, PHONEOUT_WAIT_MIN: %d, app_label_buffer: %s", app_timeago_diff, PHONEOUT_WAIT_MIN, app_label_buffer);
 		if ( (app_timeago_diff >= PHONEOUT_WAIT_MIN) || ( (strcmp(app_label_buffer, "") != 0) && (strcmp(app_label_buffer, "m") != 0) ) ) {
 			// set phone off icon
 			create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEOFF_ICON_INDX]); 
@@ -1684,7 +1688,7 @@ void handle_minute_tick_cgm(struct tm* tick_time_cgm, TimeUnits units_changed_cg
 	if (units_changed_cgm & MINUTE_UNIT) {
 		//APP_LOG(APP_LOG_LEVEL_INFO, "TICK TIME MINUTE CODE");
 	if(clock_is_24h_style() == true) {
-				tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%H:%M", tick_time_cgm);	
+		tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%H:%M", tick_time_cgm);	
 	} else {
 		tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%l:%M", tick_time_cgm);
 	}
