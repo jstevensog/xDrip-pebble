@@ -1161,6 +1161,23 @@ static void load_bg() {
 	
 } // end load_bg
 
+// Gets the UTC offset of the local time in seconds 
+// (pass in an existing localtime struct tm to save creating another one, or else pass NULL)
+time_t get_UTC_offset(struct tm *t) {
+#ifdef PBL_PLATFORM_BASALT
+  if (t == NULL) {
+    time_t temp;
+    temp = time(NULL);
+    t = localtime(&temp);
+  }
+  
+  return t->tm_gmtoff + ((t->tm_isdst > 0) ? 3600 : 0);
+#else
+  // Aplite uses localtime instead of UTC for all time functions so always return 0
+  return 0; 
+#endif 
+}
+
 static void load_cgmtime() {
 	//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD CGMTIME FUNCTION START");
 	
@@ -1170,10 +1187,6 @@ static void load_cgmtime() {
 	int cgm_timeago_diff = 0;
 	static char formatted_cgm_timeago[10];
 	static char cgm_label_buffer[6];
-	#ifdef PBL_PLATFORM_BASALT
-	static time_t gmtime_now;
-	long time_zone_diff = 0;
-	#endif	
 		
 	// CODE START
 	
@@ -1192,12 +1205,8 @@ static void load_cgmtime() {
 		// set rcvr on icon
 		//create_update_bitmap(&cgmicon_bitmap,cgmicon_layer,TIMEAGO_ICONS[RCVRON_ICON_INDX]);
 		
-		#ifdef PBL_PLATFORM_APLITE	
 		time_now = time(NULL);
-		#else
-		gmtime_now = time(NULL);
-		time_now = mktime(localtime(&gmtime_now));
-		#endif
+		time_now = time_now + get_UTC_offset(localtime(&time_now));
 		
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIME: %lu", current_cgm_time);
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, time_now: %lu, current_cgm_time: %lu", time_now, current_cgm_time);
@@ -1270,10 +1279,6 @@ static void load_apptime(){
 	int app_timeago_diff = 0;
 	static char formatted_app_timeago[10];
 	static char app_label_buffer[6];
-	#ifdef PBL_PLATFORM_BASALT
-	static time_t gmtime_now;
-	long time_zone_diff = 0;
-	#endif	
 		
 	// CODE START
 	
@@ -1295,12 +1300,8 @@ static void load_apptime(){
 		create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEON_ICON_INDX]);			 
 			 
 		//time_now = time(NULL);
-		#ifdef PBL_PLATFORM_APLITE	
 		time_now = time(NULL);
-		#else
-		gmtime_now = time(NULL);
-		time_now = mktime(localtime(&gmtime_now));
-		#endif
+		time_now = mktime(localtime(&time_now));
 
 			
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu, current_app_time: %lu", time_now, current_app_time);
