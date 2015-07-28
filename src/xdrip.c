@@ -366,14 +366,16 @@ static void create_update_bitmap(GBitmap **bmp_image, BitmapLayer *bmp_layer, co
 // battery_handler - updates the pebble battery percentage.
 static void battery_handler(BatteryChargeState charge_state) {
 
-	static char watch_battlevel_percent[7];
-	snprintf(watch_battlevel_percent, 7, "W:%i%%", charge_state.charge_percent);
+	static char watch_battlevel_percent[9];
+	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
 	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
 	if(charge_state.is_charging) {
 		#ifdef PBL_COLOR
+		//APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
 		text_layer_set_text_color(watch_battlevel_layer, GColorDukeBlue);
 		text_layer_set_background_color(watch_battlevel_layer, GColorGreen);
 		#else
+		//APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
 		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
 		#endif
@@ -1164,7 +1166,7 @@ static void load_bg() {
 // Gets the UTC offset of the local time in seconds 
 // (pass in an existing localtime struct tm to save creating another one, or else pass NULL)
 time_t get_UTC_offset(struct tm *t) {
-#ifdef PBL_PLATFORM_BASALT
+#ifdef PBL_SDK_3
   if (t == NULL) {
     time_t temp;
     temp = time(NULL);
@@ -1213,9 +1215,9 @@ static void load_cgmtime() {
 				
 		current_cgm_timeago = abs(time_now - current_cgm_time);
 				
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIMEAGO: %lu", current_cgm_timeago);
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIMEAGO: %lu", current_cgm_timeago);
 			
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, GM TIME AGO LABEL IN: %s", cgm_label_buffer);
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, GM TIME AGO LABEL IN: %s", cgm_label_buffer);
 			
 		if (current_cgm_timeago < MINUTEAGO) {
 			cgm_timeago_diff = 0;
@@ -1288,7 +1290,7 @@ static void load_apptime(){
 	strncpy(app_label_buffer, "", LABEL_BUFFER_SIZE);		
 	
 	
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, NEW APP TIME: %lu", current_app_time);
+	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, NEW APP TIME: %lu", current_app_time);
 		
 	// check for init or error code
 	if (current_app_time == 0) {	 
@@ -1342,7 +1344,7 @@ static void load_apptime(){
 			
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, CHECK FOR PHONE OFF ICON");
 		// check to see if we need to set phone off icon
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d, PHONEOUT_WAIT_MIN: %d, app_label_buffer: %s", app_timeago_diff, PHONEOUT_WAIT_MIN, app_label_buffer);
+		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d, PHONEOUT_WAIT_MIN: %d, app_label_buffer: %s", app_timeago_diff, PHONEOUT_WAIT_MIN, app_label_buffer);
 		if ( (app_timeago_diff >= PHONEOUT_WAIT_MIN) || ( (strcmp(app_label_buffer, "") != 0) && (strcmp(app_label_buffer, "m") != 0) ) ) {
 			// set phone off icon
 			create_update_bitmap(&appicon_bitmap,appicon_layer,TIMEAGO_ICONS[PHONEOFF_ICON_INDX]); 
@@ -1813,47 +1815,19 @@ void window_load_cgm(Window *window_cgm) {
 
 	// WATCH BATTERY LEVEL
 	BatteryChargeState charge_state=battery_state_service_peek();
-	static char watch_battlevel_percent[7];
-	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
+	//snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
 	#ifdef PBL_COLOR
 	watch_battlevel_layer = text_layer_create(GRect(70, 150, 75, 18));
+	APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
 	#else
+	APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
 	watch_battlevel_layer = text_layer_create(GRect(81, 148, 59, 18));
 	#endif
-	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
-	if(charge_state.is_charging) {
-		#ifdef PBL_COLOR
-		text_layer_set_text_color(watch_battlevel_layer, GColorDukeBlue);
-		text_layer_set_background_color(watch_battlevel_layer, GColorGreen);
-		#else
-		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
-		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
-		#endif
-	} else {
-//		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
-//		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
-		#ifdef PBL_COLOR
-		//APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
-		if(charge_state.charge_percent > 40) {
-			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 40");
-			text_layer_set_text_color(watch_battlevel_layer, GColorGreen);
-		} else if (charge_state.charge_percent > 20) {
-			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY > 20");
-			text_layer_set_text_color(watch_battlevel_layer, GColorYellow);
-		} else {
-			//APP_LOG(APP_LOG_LEVEL_INFO, "BATTERY <= 20");
-			text_layer_set_text_color(watch_battlevel_layer, GColorRed);
-		}
-		text_layer_set_background_color(watch_battlevel_layer, GColorDukeBlue);
-		#else	
-		//APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
-		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
-		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
-		#endif
-	}	
 	text_layer_set_font(watch_battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
+	battery_handler(charge_state);
+	//APP_LOG(APP_LOG_LEVEL_INFO, "watch_battlevel_layer; %s", text_layer_get_text(watch_battlevel_layer));
 
 	// CURRENT ACTUAL TIME FROM WATCH
 	#ifdef PBL_COLOR
