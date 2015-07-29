@@ -1208,7 +1208,7 @@ static void load_cgmtime() {
 		//create_update_bitmap(&cgmicon_bitmap,cgmicon_layer,TIMEAGO_ICONS[RCVRON_ICON_INDX]);
 		
 		time_now = time(NULL);
-		time_now = time_now + get_UTC_offset(localtime(&time_now));
+		time_now = abs(time_now + get_UTC_offset(localtime(&time_now)));
 		
 		//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CURRENT CGM TIME: %lu", current_cgm_time);
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, time_now: %lu, current_cgm_time: %lu", time_now, current_cgm_time);
@@ -1303,7 +1303,7 @@ static void load_apptime(){
 			 
 		//time_now = time(NULL);
 		time_now = time(NULL);
-		time_now = mktime(localtime(&time_now));
+		time_now = abs(time_now + get_UTC_offset(localtime(&time_now)));
 
 			
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu, current_app_time: %lu", time_now, current_app_time);
