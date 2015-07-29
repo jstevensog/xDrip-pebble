@@ -1439,6 +1439,18 @@ static void load_bg_delta() {
 		text_layer_set_text(message_layer, formatted_bg_delta);
 		return;	
 	}
+	//check for "--" indicating an indeterminate delta.  Display it.
+	if (strcmp(current_bg_delta, "--") == 0) {
+		strncpy(formatted_bg_delta, "--", BGDELTA_FORMATTED_SIZE);
+		if (!currentBG_isMMOL) {
+			strncpy(delta_label_buffer, " mg/dl", BGDELTA_LABEL_SIZE);
+		} else {
+			strncpy(delta_label_buffer, " mmol", BGDELTA_LABEL_SIZE);
+		}
+		strcat(formatted_bg_delta, delta_label_buffer);
+		text_layer_set_text(message_layer, formatted_bg_delta);
+		return;	
+	}
 	
 	// check to see if we have MG/DL or MMOL
 	// get currentBG_isMMOL in myBGAtoi
