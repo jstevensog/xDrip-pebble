@@ -273,15 +273,17 @@ int myBGAtoi(char *str) {
 	
 	// CODE START
  
+	// If we have the "???" special value, return 0
+	if (strcmp(str, "???") == 0) return res;
+	
 	// initialize currentBG_isMMOL flag
 	currentBG_isMMOL = false;
 	
 	APP_LOG(APP_LOG_LEVEL_INFO, "myBGAtoi, START str is MMOL: %s", str );
-	
 	// Iterate through all characters of input string and update result
 	for (int i = 0; str[i] != '\0'; ++i) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "myBGAtoi, STRING IN: %s", &str[i] );
-		if (str[i] == ('.')) {
+		if (str[i] == ('.')||str[i] == (',')) {
 			currentBG_isMMOL = true;
 		}
 		else if ( (str[i] >= ('0')) && (str[i] <= ('9')) ) {
@@ -1440,8 +1442,8 @@ static void load_bg_delta() {
 		return;	
 	}
 	//check for "--" indicating an indeterminate delta.  Display it.
-	if (strcmp(current_bg_delta, "--") == 0) {
-		strncpy(formatted_bg_delta, "--", BGDELTA_FORMATTED_SIZE);
+	if (strcmp(current_bg_delta, "???") == 0) {
+		strncpy(formatted_bg_delta, current_bg_delta, BGDELTA_FORMATTED_SIZE);
 		if (!currentBG_isMMOL) {
 			strncpy(delta_label_buffer, " mg/dl", BGDELTA_LABEL_SIZE);
 		} else {
@@ -1452,10 +1454,23 @@ static void load_bg_delta() {
 		return;	
 	}
 	
+	//check for "ERR" indicating an indeterminate delta.  Display it.
+	if (strcmp(current_bg_delta, "ERR") == 0) {
+		strncpy(formatted_bg_delta, current_bg_delta, BGDELTA_FORMATTED_SIZE);
+		if (!currentBG_isMMOL) {
+			strncpy(delta_label_buffer, " mg/dl", BGDELTA_LABEL_SIZE);
+		} else {
+			strncpy(delta_label_buffer, " mmol", BGDELTA_LABEL_SIZE);
+		}
+		strcat(formatted_bg_delta, delta_label_buffer);
+		text_layer_set_text(message_layer, formatted_bg_delta);
+		return;	
+	}
+
 	// check to see if we have MG/DL or MMOL
 	// get currentBG_isMMOL in myBGAtoi
 	converted_bgDelta = myBGAtoi(current_bg_delta);
- 
+
 	// Bluetooth is good, Phone is good, CGM connection is good, no special message 
 	// set delta BG message
 	
@@ -1463,9 +1478,10 @@ static void load_bg_delta() {
 	if (!currentBG_isMMOL) {
 		// set mg/dL string
 		APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG DELTA: FOUND MG/DL, SET STRING");
-		if (converted_bgDelta >= 100) {
+		if (converted_bgDelta >= 990) {
 			// bg delta too big, set zero instead
-			strncpy(formatted_bg_delta, "0", BGDELTA_FORMATTED_SIZE);
+			//strncpy(formatted_bg_delta, "0", BGDELTA_FORMATTED_SIZE);
+			strncpy(formatted_bg_delta, "ERR", BGDELTA_FORMATTED_SIZE);
 		}
 		else {
 			strncpy(formatted_bg_delta, current_bg_delta, BGDELTA_FORMATTED_SIZE);
@@ -1476,9 +1492,10 @@ static void load_bg_delta() {
 	else {
 		// set mmol string
 		APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG DELTA: FOUND MMOL, SET STRING");
-		if (converted_bgDelta >= 55) {
+		if (currentBG_isMMOL && converted_bgDelta >= 55) {
 			// bg delta too big, set zero instead
-			strncpy(formatted_bg_delta, "0.0", BGDELTA_FORMATTED_SIZE);
+			//strncpy(formatted_bg_delta, "0.0", BGDELTA_FORMATTED_SIZE);
+			strncpy(formatted_bg_delta, "ERR", BGDELTA_FORMATTED_SIZE);
 		}
 		else {
 			strncpy(formatted_bg_delta, current_bg_delta, BGDELTA_FORMATTED_SIZE);
@@ -1486,6 +1503,7 @@ static void load_bg_delta() {
 		strncpy(delta_label_buffer, " mmol", BGDELTA_LABEL_SIZE);
 		strcat(formatted_bg_delta, delta_label_buffer);
 	}
+
 	if((currentBG_isMMOL && current_bg == 55) || (!currentBG_isMMOL && (current_bg == 100 || current_bg == 99))) {
 		text_layer_set_text(message_layer, "BAZINGA!");
 		#ifdef PBL_COLOR
