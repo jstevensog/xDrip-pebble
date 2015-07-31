@@ -888,25 +888,25 @@ static void load_icon() {
 			DoubleDownAlert = false;
 			}
 			else if (strcmp(current_icon, DOUBLEDOWN_ARROW) == 0) {
-			if (!DoubleDownAlert) {
-				APP_LOG(APP_LOG_LEVEL_INFO, "LOAD ICON, ICON ARROW: DOUBLE DOWN");
-				alert_handler_cgm(DOUBLEDOWN_VIBE);
-				DoubleDownAlert = true;
-			}
-			create_update_bitmap(&icon_bitmap,icon_layer,ARROW_ICONS[DOWNDOWN_ICON_INDX]);
+/*				if (!DoubleDownAlert) {
+					APP_LOG(APP_LOG_LEVEL_INFO, "LOAD ICON, ICON ARROW: DOUBLE DOWN");
+					alert_handler_cgm(DOUBLEDOWN_VIBE);
+					DoubleDownAlert = true;
+				}
+*/				create_update_bitmap(&icon_bitmap,icon_layer,ARROW_ICONS[DOWNDOWN_ICON_INDX]);
 			} 
 			else {
-			// check for special cases and set icon accordingly
-		// check bluetooth
-			bluetooth_connected_cgm = bluetooth_connection_service_peek();
-				
-			// check to see if we are in the loading screen	
-			if (!bluetooth_connected_cgm) {
+				// check for special cases and set icon accordingly
+				// check bluetooth
+				bluetooth_connected_cgm = bluetooth_connection_service_peek();
+					
+				// check to see if we are in the loading screen	
+				if (!bluetooth_connected_cgm) {
 				// Bluetooth is out; in the loading screen so set logo
-				create_update_bitmap(&icon_bitmap,icon_layer,ARROW_ICONS[LOGO_ARROW_ICON_INDX]);
-			}
-			else {
-			// unexpected, set error icon
+					create_update_bitmap(&icon_bitmap,icon_layer,ARROW_ICONS[LOGO_ARROW_ICON_INDX]);
+				}
+				else {
+				// unexpected, set error icon
 				create_update_bitmap(&icon_bitmap,icon_layer,ARROW_ICONS[ERR_ARROW_ICON_INDX]);
 			}
 			DoubleDownAlert = false;
