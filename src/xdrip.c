@@ -266,6 +266,7 @@ int myAtoi(char *str) {
 		return res;
 } // end myAtoi
 
+
 int myBGAtoi(char *str) {
 
 	// VARIABLES
@@ -275,6 +276,8 @@ int myBGAtoi(char *str) {
  
 	// If we have the "???" special value, return 0
 	if (strcmp(str, "???") == 0) return res;
+	if (strcmp(str, "LOW") == 0) return 13;
+	if (strcmp(str, "HIGH") == 0) return 410;
 	
 	// initialize currentBG_isMMOL flag
 	currentBG_isMMOL = false;
