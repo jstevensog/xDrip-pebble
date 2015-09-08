@@ -372,7 +372,11 @@ static void create_update_bitmap(GBitmap **bmp_image, BitmapLayer *bmp_layer, co
 static void battery_handler(BatteryChargeState charge_state) {
 
 	static char watch_battlevel_percent[9];
+	#ifdef PBL_COLOR
+	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%% ", charge_state.charge_percent);
+	#else
 	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
+	#endif
 	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
 	if(charge_state.is_charging) {
 		#ifdef PBL_COLOR
@@ -1569,7 +1573,11 @@ static void load_battlevel() {
 	}
 			
 	// get current battery level and set battery level text with percent
+	#ifdef PBL_COLOR
+	snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, " B:%i%%", current_battlevel);
+	#else
 	snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "B:%i%%", current_battlevel);
+	#endif
 	text_layer_set_text(battlevel_layer, battlevel_percent);
 	#ifdef PBL_COLOR
 	if ( (current_battlevel > 0) && (current_battlevel <= 30) ) {
@@ -1834,7 +1842,7 @@ void window_load_cgm(Window *window_cgm) {
 
 	// PHONE BATTERY LEVEL
 	#ifdef PBL_COLOR
-	battlevel_layer = text_layer_create(GRect(0, 150, 75, 18));
+	battlevel_layer = text_layer_create(GRect(0, 150, 80, 18));
 	text_layer_set_text_color(battlevel_layer, GColorGreen);
 	text_layer_set_background_color(battlevel_layer, GColorDukeBlue);
 	#else
@@ -1850,10 +1858,10 @@ void window_load_cgm(Window *window_cgm) {
 	BatteryChargeState charge_state=battery_state_service_peek();
 	//snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
 	#ifdef PBL_COLOR
-	watch_battlevel_layer = text_layer_create(GRect(70, 150, 75, 18));
+	watch_battlevel_layer = text_layer_create(GRect(65, 150, 80, 18));
 	APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
 	#else
-	APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
+	APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 	watch_battlevel_layer = text_layer_create(GRect(81, 148, 59, 18));
 	#endif
 	text_layer_set_font(watch_battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));

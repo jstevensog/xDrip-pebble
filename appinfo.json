@@ -112,7 +112,7 @@
   "shortName": "xDrip Watch Face",
   "uuid": "79f8ecb3-7214-4bfc-b996-cb95148ee6d3",
   "versionCode": 1,
-  "versionLabel": "1.2",
+  "versionLabel": "1.3",
   "watchapp": {
     "watchface": true
   },
