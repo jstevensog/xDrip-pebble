@@ -9,7 +9,6 @@
     "ubat": 5
   },
   "capabilities": [
-    "configurable"
   ],
   "companyName": "Nightscout Contributors",
   "longName": "xDrip Watch Face",
@@ -112,7 +111,7 @@
   "shortName": "xDrip Watch Face",
   "uuid": "79f8ecb3-7214-4bfc-b996-cb95148ee6d3",
   "versionCode": 1,
-  "versionLabel": "1.3",
+  "versionLabel": "1.4",
   "watchapp": {
     "watchface": true
   },
