@@ -12,7 +12,7 @@
         ""
     ],
     "companyName": "Nightscout Contributors",
-    "longName": "xDrip Pebble Round Test",
+    "longName": "xDrip Pebble",
     "projectType": "native",
     "resources": {
         "media": [
@@ -110,14 +110,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "xDrip Round Test",
+    "shortName": "xDrip Pebble",
     "targetPlatforms": [
         "aplite",
         "basalt",
         "chalk"
     ],
     "uuid": "79f8ecb3-7214-4bfc-b996-cb95148ee6d3",
-    "versionLabel": "1.4",
+    "versionLabel": "1.5",
     "watchapp": {
         "watchface": true
     }

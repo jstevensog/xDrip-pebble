@@ -1497,8 +1497,7 @@ static void load_bg_delta() {
 	if (strcmp(current_bg_delta, "LOAD") == 0) {
 		strncpy(formatted_bg_delta, "LOADING...", MSGLAYER_BUFFER_SIZE);
 		text_layer_set_text(message_layer, formatted_bg_delta);
-		text_layer_set_text(bg_layer, "5.5");
-		// text_layer_set_text(formatted_app_timeago, "OK");
+		text_layer_set_text(bg_layer, " ");
 		create_update_bitmap(&icon_bitmap,icon_layer,SPECIAL_VALUE_ICONS[LOGO_SPECVALUE_ICON_INDX]);
 		specvalue_alert = false;
 		return;	
@@ -1886,10 +1885,8 @@ void window_load_cgm(Window *window_cgm) {
 	window_layer_cgm = window_get_root_layer(window_cgm);
 	
 	// DELTA BG
-  #ifdef PBL_ROUND
+	#ifdef PBL_ROUND
 	message_layer = text_layer_create(GRect(0, 33, 180, 50));
-	//text_layer_set_text_color(message_layer, GColorDukeBlue);
-	//text_layer_set_background_color(message_layer, GColorBlack);
 	text_layer_set_font(message_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	#elif PBL_COLOR
 	message_layer = text_layer_create(GRect(0, 33, 144, 50));
@@ -1906,33 +1903,53 @@ void window_load_cgm(Window *window_cgm) {
 	layer_add_child(window_layer_cgm, text_layer_get_layer(message_layer));
 
 	// ARROW OR SPECIAL VALUE
-	//icon_layer = bitmap_layer_create(GRect(85, -7, 78, 50));
-  #ifdef PBL_ROUND
+	// icon_layer = bitmap_layer_create(GRect(85, -7, 78, 50));
+	// bitmap_layer_set_alignment(icon_layer, GAlignTopLeft);
+	#ifdef PBL_ROUND
   icon_layer = bitmap_layer_create(GRect(120, 30, 78, 50));
   bitmap_layer_set_alignment(icon_layer, GAlignTopLeft);
   #else
   icon_layer = bitmap_layer_create(GRect(85, -7, 78, 50));
   bitmap_layer_set_alignment(icon_layer, GAlignTopLeft);
   #endif
-	
-	bitmap_layer_set_background_color(icon_layer, GColorWhite);
+  bitmap_layer_set_background_color(icon_layer, GColorWhite);
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(icon_layer));
 
 	// APP TIME AGO ICON
-  #ifdef PBL_ROUND
+	#ifdef PBL_ROUND
 	appicon_layer = bitmap_layer_create(GRect(90, 63, 40, 24));
+  bitmap_layer_set_background_color(appicon_layer, GColorBlack);
   #elif PBL_COLOR
 	appicon_layer = bitmap_layer_create(GRect(118, 63, 40, 24));
+  bitmap_layer_set_background_color(appicon_layer, GColorWhite);
 	#else
 	appicon_layer = bitmap_layer_create(GRect(118, 63, 40, 24));
+  bitmap_layer_set_background_color(appicon_layer, GColorWhite);
 	#endif
 	bitmap_layer_set_alignment(appicon_layer, GAlignLeft);
-	bitmap_layer_set_background_color(appicon_layer, GColorBlack);
+	// bitmap_layer_set_background_color(appicon_layer, GColorWhite);
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(appicon_layer));	
+  
+  //KW TODO: move BG section to here maybe?
 
-  
-  
-  	// BG
+	// APP TIME AGO READING
+	#ifdef PBL_ROUND
+	time_app_layer = text_layer_create(GRect(65, 58, 65, 24));
+	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+	#elif PBL_COLOR
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+	text_layer_set_background_color(time_app_layer, GColorWhite);
+	#else
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorBlack);
+	text_layer_set_background_color(time_app_layer, GColorClear);
+	#endif
+	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
+	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
+	
+	// BG
 	#ifdef PBL_ROUND
 	bg_layer = text_layer_create(GRect(0, -7, 180, 47));
 	text_layer_set_text_color(bg_layer, GColorDukeBlue);
@@ -1950,41 +1967,17 @@ void window_load_cgm(Window *window_cgm) {
 	text_layer_set_text_alignment(bg_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(bg_layer));
 
-  
-  
-  
-  
-	// APP TIME AGO READING
-	#ifdef PBL_ROUND
-	time_app_layer = text_layer_create(GRect(65, 58, 65, 24));
-	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
-	// text_layer_set_background_color(time_app_layer, GColorGreen);
-	#elif PBL_COLOR
-	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
-	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
-	text_layer_set_background_color(time_app_layer, GColorWhite);
-	#else
-	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
-	text_layer_set_text_color(time_app_layer, GColorBlack);
-	text_layer_set_background_color(time_app_layer, GColorClear);
-	#endif
-	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
-	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
-	
-
 	
 	// CGM TIME AGO READING
-  #ifdef PBL_ROUND
+	#ifdef PBL_ROUND
   cgmtime_layer = text_layer_create(GRect(5, 58, 60, 24));
 	text_layer_set_text_color(cgmtime_layer, GColorDukeBlue);
-	//text_layer_set_background_color(cgmtime_layer, GColorRed);
 	#elif PBL_COLOR
-	cgmtime_layer = text_layer_create(GRect(5, 58, 140, 24));
+	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
 	text_layer_set_text_color(cgmtime_layer, GColorDukeBlue);
 	text_layer_set_background_color(cgmtime_layer, GColorWhite);
 	#else
-	cgmtime_layer = text_layer_create(GRect(5, 58, 140, 24));
+	cgmtime_layer = text_layer_create(GRect(5, 58, 40, 24));
 	text_layer_set_text_color(cgmtime_layer, GColorBlack);
 	text_layer_set_background_color(cgmtime_layer, GColorClear);
 	#endif
@@ -1992,10 +1985,6 @@ void window_load_cgm(Window *window_cgm) {
 	text_layer_set_text_alignment(cgmtime_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(cgmtime_layer));
 
-  
-  
-  
-  
 	// PHONE BATTERY LEVEL
 	#ifdef PBL_COLOR
 	battlevel_layer = text_layer_create(GRect(0, 150, 80, 18));
@@ -2013,21 +2002,21 @@ void window_load_cgm(Window *window_cgm) {
 	// WATCH BATTERY LEVEL
 	BatteryChargeState charge_state=battery_state_service_peek();
 	//snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
-	#ifdef PBL_ROUND
+  #ifdef PBL_ROUND
 	watch_battlevel_layer = text_layer_create(GRect(0, 150, 180, 30));
   text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentCenter);
 	APP_LOG(APP_LOG_LEVEL_INFO, "ROUND DETECTED");
   #elif PBL_COLOR
 	watch_battlevel_layer = text_layer_create(GRect(65, 150, 80, 18));
-  text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
 	APP_LOG(APP_LOG_LEVEL_INFO, "COLOR DETECTED");
 	#else
+	// (sorry line placement in wrong place LOL)  APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 	watch_battlevel_layer = text_layer_create(GRect(81, 148, 59, 18));
   text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
   APP_LOG(APP_LOG_LEVEL_INFO, "BW DETECTED");
 	#endif
 	text_layer_set_font(watch_battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-// 	text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
+	// text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
 	battery_handler(charge_state);
 	//APP_LOG(APP_LOG_LEVEL_INFO, "watch_battlevel_layer; %s", text_layer_get_text(watch_battlevel_layer));
