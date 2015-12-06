@@ -1497,7 +1497,7 @@ static void load_bg_delta() {
 	if (strcmp(current_bg_delta, "LOAD") == 0) {
 		strncpy(formatted_bg_delta, "LOADING...", MSGLAYER_BUFFER_SIZE);
 		text_layer_set_text(message_layer, formatted_bg_delta);
-		text_layer_set_text(bg_layer, " ");
+		text_layer_set_text(bg_layer, "5.5");
 		create_update_bitmap(&icon_bitmap,icon_layer,SPECIAL_VALUE_ICONS[LOGO_SPECVALUE_ICON_INDX]);
 		specvalue_alert = false;
 		return;	
@@ -1931,24 +1931,6 @@ void window_load_cgm(Window *window_cgm) {
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(appicon_layer));	
   
   //KW TODO: move BG section to here maybe?
-
-	// APP TIME AGO READING
-	#ifdef PBL_ROUND
-	time_app_layer = text_layer_create(GRect(65, 58, 65, 24));
-	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
-	#elif PBL_COLOR
-	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
-	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
-	text_layer_set_background_color(time_app_layer, GColorWhite);
-	#else
-	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
-	text_layer_set_text_color(time_app_layer, GColorBlack);
-	text_layer_set_background_color(time_app_layer, GColorClear);
-	#endif
-	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
-	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
-	
 	// BG
 	#ifdef PBL_ROUND
 	bg_layer = text_layer_create(GRect(0, -7, 180, 47));
@@ -1966,6 +1948,26 @@ void window_load_cgm(Window *window_cgm) {
 	text_layer_set_font(bg_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_alignment(bg_layer, GTextAlignmentCenter);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(bg_layer));
+  
+  
+	// APP TIME AGO READING
+	#ifdef PBL_ROUND
+	time_app_layer = text_layer_create(GRect(65, 58, 65, 24));
+	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+	#elif PBL_COLOR
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorDukeBlue);
+	text_layer_set_background_color(time_app_layer, GColorWhite);
+	#else
+	time_app_layer = text_layer_create(GRect(77, 58, 40, 24));
+	text_layer_set_text_color(time_app_layer, GColorBlack);
+	text_layer_set_background_color(time_app_layer, GColorClear);
+	#endif
+	text_layer_set_font(time_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	text_layer_set_text_alignment(time_app_layer, GTextAlignmentRight);
+	layer_add_child(window_layer_cgm, text_layer_get_layer(time_app_layer));
+	
+
 
 	
 	// CGM TIME AGO READING
